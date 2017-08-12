@@ -14,7 +14,37 @@ _________________________________________________________________
 
 Instructions:
 
-Run log_analysis.py in vagrant virtual machine with newsdata.sql pre-run.
+Prerequisite Programs:
+python-				https://www.python.org/
+postgreSQL - 		https://www.postgresql.org/
+News database - 	https://d17h27t6h515a5.cloudfront.net/topher/2016/August/57b5f748_newsdata/newsdata.zip
+
+Installing the database:
+To load the data, use the command: psql -d news -f newsdata.sql
+
+Running the Logs Analysis:
+To run the logs analysis, use the command: python log_analsys.py
+
+The Analysis will print out the three answers on the command line in this format:
+
+Most Popular Three Articles of All Time:
+
+"Example One" - 300 views
+"Example Two" - 200 views
+"Example Three" - 100 views
+
+Most Popular Three Authors of All Time:
+
+Jane Doe - 300 views
+John Smith - 200 views
+Julius Spencer McDoyle III - 100 views
+
+Days where more than 1% of server requests led to errors:
+
+January 1, 2000 - 1.01%
+January 2, 2000 - 1.31%
+January 4, 2000 - 3.00%
+January 9, 2000 - 1.04%
 _________________________________________________________________
 
 The 'news' database contains three tables:

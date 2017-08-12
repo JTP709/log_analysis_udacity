@@ -107,7 +107,7 @@ if __name__=="__main__":
     top_3_authors = top_3_authors()
     errors = errors()
 
-    print('Most Popular Three Articles of All Time:\n')
+    print('\nMost Popular Three Articles of All Time:\n')
     for i in range(3):
         print("\""+str(top_3_articles[i][0])+"\" - "+str(top_3_articles[i][1])+" views")
 
@@ -118,4 +118,5 @@ if __name__=="__main__":
     print('\n\nDays where more than 1% of server requests led to errors:\n')
     for k in range(len(errors)):
         print(str(errors[k][0])+" - "+str(round(errors[k][1], 2))+"%")
+    print('\n')
 
