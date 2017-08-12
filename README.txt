@@ -65,3 +65,27 @@ Question 3 Solution:
 	The second view generated a similar table except it only counted '404 NOT FOUND' statuses.
 
 	The final query's subquery created a table with the date column and column with percentages of error status generated from the numbers created in the two View tables. The final query returned only the dates with errors greater than 1%.
+_________________________________________________________________
+
+Views:
+
+CREATE VIEW access_sum AS
+	SELECT access_t.time, count(access_t.access_total)
+		as access_count
+	FROM (SELECT log.time::date, count(log.status)
+		as access_total
+	FROM log
+	GROUP BY log.time)
+		as access_t
+	GROUP BY access_t.time;
+
+CREATE VIEW error_sum AS
+	SELECT error_t.time, count(error_t.error_total)
+		as error_count
+	FROM (SELECT log.time::date, count(log.status)
+		as error_total
+	FROM log
+	WHERE log.status = '404 NOT FOUND'
+	GROUP BY log.time)
+		as error_t
+	GROUP By error_t.time;
