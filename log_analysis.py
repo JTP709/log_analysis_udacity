@@ -9,54 +9,60 @@ Questions:
 """
 
 
-def connect():
+def connect(database_name="news"):
     """Connects to database"""
-    return psycopg2.connect("dbname=news")
+    try:
+        db = psycopg2.connect("dbname={}".format(database_name))
+        cursor = db.cursor()
+        return db, cursor
+    except:
+        print ("<error message>")
 
 
 def top_3_articles():
     """Determines the most popular three articles of all time."""
-    conn = connect()
-    cursor = conn.cursor()
-    cursor.execute("""SELECT articles.title, count(*) as num
-                        FROM log JOIN articles
-                        ON log.path LIKE '/article/' || articles.slug || '%'
-                        GROUP BY articles.title
-                        ORDER BY num desc
-                        LIMIT 3;
-                    """)
+    db, cursor = connect()
+    query = """
+            SELECT articles.title, count(*) as num
+                FROM log JOIN articles
+                ON log.path = concat('/article/', articles.slug)
+                GROUP BY articles.title
+                ORDER BY num desc
+                LIMIT 3;
+            """
+    cursor.execute(query)
     results = cursor.fetchall()
     return results
-    conn.close()
+    db.close()
 
 
 def top_3_authors():
     """Determines the most popular article authors of all time."""
-    conn = connect()
-    cursor = conn.cursor()
-    cursor.execute("""SELECT authors.name, count(*) as num
-                        FROM
-                            authors
-                        JOIN
-                            articles
-                        ON articles.author = authors.id
-                        JOIN
-                            log
-                        ON log.path LIKE '/article/' || articles.slug || '%'
-                        GROUP BY authors.name
-                        ORDER BY num desc
-                        LIMIT 3;
-                    """)
+    db, cursor = connect()
+    query = """
+            SELECT authors.name, count(*) as num
+                FROM
+                    authors
+                JOIN
+                    articles
+                ON articles.author = authors.id
+                JOIN
+                    log
+                ON log.path = concat('/article/', articles.slug)
+                GROUP BY authors.name
+                ORDER BY num desc
+                LIMIT 3;
+            """
+    cursor.execute(query)
     results = cursor.fetchall()
     return results
-    conn.close()
+    db.close()
 
 
 def errors():
     """Determines which days did more than 1% of requests lead to errors."""
-    conn = connect()
-    cursor = conn.cursor()
-    cursor.execute("""
+    db, cursor = connect()
+    query = """
                 CREATE VIEW access_sum AS
                     SELECT access_t.time, count(access_t.access_total)
                         as access_count
@@ -78,7 +84,7 @@ def errors():
                         as error_t
                     GROUP By error_t.time;
 
-                SELECT percent.time, percent.percentage
+                SELECT to_char(percent.time, 'FMMonth FMDD, YYYY'), percent.percentage
                     FROM (SELECT error_sum.time,
                         sum(error_sum.error_count::float/
                         access_sum.access_count::float)*100
@@ -88,10 +94,11 @@ def errors():
                         GROUP BY error_sum.time)
                         as percent
                     WHERE percent.percentage > 1;
-                """)
+                """
+    cursor.execute(query)
     results = cursor.fetchall()
     return results
-    conn.close()
+    db.close()
 
 
 top_3_articles = top_3_articles()
@@ -100,7 +107,7 @@ errors = errors()
 
 print('Most Popular Three Articles of All Time:\n')
 for i in range(3):
-    print(str(top_3_articles[i][0])+" - "+str(top_3_articles[i][1])+" views")
+    print("\""+str(top_3_articles[i][0])+"\" - "+str(top_3_articles[i][1])+" views")
 
 print('\n\nMost Popular Three Authors of All Time:\n')
 for j in range(3):
@@ -109,3 +116,4 @@ for j in range(3):
 print('\n\nDays where more than 1% of server requests led to errors:\n')
 for k in range(len(errors)):
     print(str(errors[k][0])+" - "+str(round(errors[k][1], 2))+"%")
+
