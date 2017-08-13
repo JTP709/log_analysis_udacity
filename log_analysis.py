@@ -1,4 +1,4 @@
-#! /usr/bin/env
+#! /usr/bin/env python3
 import psycopg2
 
 """
@@ -63,19 +63,6 @@ def errors():
     """Determines which days did more than 1% of requests lead to errors."""
     db, cursor = connect()
     query = """
-                CREATE VIEW access_sum AS
-                    SELECT log.time::date, count(log.status)
-                        as access_total
-                        FROM log
-                        GROUP BY log.time::date;
-
-                CREATE VIEW error_sum AS
-                    SELECT log.time::date, count(log.status)
-                        as error_total
-                        FROM log
-                        WHERE log.status = '404 NOT FOUND'
-                        GROUP BY log.time::date;
-
                 SELECT to_char(percent.time, 'FMMonth FMDD, YYYY'), round(percent.percentage, 2)
                     FROM (
                         SELECT error_sum.time,
