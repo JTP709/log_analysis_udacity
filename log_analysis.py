@@ -51,8 +51,7 @@ def top_3_authors():
                     log
                 ON log.path = concat('/article/', articles.slug)
                 GROUP BY authors.name
-                ORDER BY num desc
-                LIMIT 3;
+                ORDER BY num desc;
             """
     cursor.execute(query)
     results = cursor.fetchall()
@@ -65,36 +64,29 @@ def errors():
     db, cursor = connect()
     query = """
                 CREATE VIEW access_sum AS
-                    SELECT access_t.time, count(access_t.access_total)
-                        as access_count
-                    FROM (SELECT log.time::date, count(log.status)
+                    SELECT log.time::date, count(log.status)
                         as access_total
                         FROM log
-                        GROUP BY log.time)
-                        as access_t
-                    GROUP BY access_t.time;
+                        GROUP BY log.time::date;
 
                 CREATE VIEW error_sum AS
-                    SELECT error_t.time, count(error_t.error_total)
-                        as error_count
-                    FROM (SELECT log.time::date, count(log.status)
+                    SELECT log.time::date, count(log.status)
                         as error_total
                         FROM log
                         WHERE log.status = '404 NOT FOUND'
-                        GROUP BY log.time)
-                        as error_t
-                    GROUP By error_t.time;
+                        GROUP BY log.time::date;
 
-                SELECT to_char(percent.time, 'FMMonth FMDD, YYYY'), percent.percentage
-                    FROM (SELECT error_sum.time,
-                        sum(error_sum.error_count::float/
-                        access_sum.access_count::float)*100
-                        as percentage
-                        FROM error_sum, access_sum
-                        WHERE error_sum.time = access_sum.time
-                        GROUP BY error_sum.time)
+                SELECT to_char(percent.time, 'FMMonth FMDD, YYYY'), round(percent.percentage, 2)
+                    FROM (
+                        SELECT error_sum.time,
+                            (error_sum.error_total::decimal/
+                            access_sum.access_total::decimal)*100
+                            as percentage
+                            FROM error_sum, access_sum
+                            WHERE error_sum.time = access_sum.time)
                         as percent
-                    WHERE percent.percentage > 1;
+                    WHERE percent.percentage > 1
+                    ;
                 """
     cursor.execute(query)
     results = cursor.fetchall()
@@ -108,15 +100,15 @@ if __name__=="__main__":
     errors = errors()
 
     print('\nMost Popular Three Articles of All Time:\n')
-    for i in range(3):
-        print("\""+str(top_3_articles[i][0])+"\" - "+str(top_3_articles[i][1])+" views")
+    for articles, views in top_3_articles:
+        print("\""+str(articles)+"\" - "+str(views)+" views")
 
     print('\n\nMost Popular Three Authors of All Time:\n')
-    for j in range(3):
-        print(str(top_3_authors[j][0])+" - "+str(top_3_authors[j][1])+" views")
+    for authors, views in top_3_authors:
+        print(str(authors)+" - "+str(views)+" views")
 
     print('\n\nDays where more than 1% of server requests led to errors:\n')
-    for k in range(len(errors)):
-        print(str(errors[k][0])+" - "+str(round(errors[k][1], 2))+"%")
+    for date, percent in errors:
+        print(str(date)+" - "+str(percent)+"%")
     print('\n')
 

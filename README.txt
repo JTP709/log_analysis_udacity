@@ -19,6 +19,8 @@ python-				https://www.python.org/
 postgreSQL - 		https://www.postgresql.org/
 News database - 	https://d17h27t6h515a5.cloudfront.net/topher/2016/August/57b5f748_newsdata/newsdata.zip
 
+Run the queries below to create the Views in the database (next section).
+
 Installing the database:
 To load the data, use the command: psql -d news -f newsdata.sql
 
@@ -45,6 +47,22 @@ January 1, 2000 - 1.01%
 January 2, 2000 - 1.31%
 January 4, 2000 - 3.00%
 January 9, 2000 - 1.04%
+_________________________________________________________________
+
+Views:
+
+CREATE VIEW access_sum AS
+    SELECT log.time::date, count(log.status)
+        as access_total
+        FROM log
+        GROUP BY log.time::date;
+
+CREATE VIEW error_sum AS
+    SELECT log.time::date, count(log.status)
+        as error_total
+        FROM log
+        WHERE log.status = '404 NOT FOUND'
+        GROUP BY log.time::date;
 _________________________________________________________________
 
 The 'news' database contains three tables:
@@ -78,44 +96,30 @@ _________________________________________________________________
 
 Question 1 Solution:
 
-	Joined articles with log using similarities between strings in log.path and articles.slug columns.
+	Joined articles with log using similarities between strings in log.path 
+	and articles.slug columns.
 
-	Counted total number of articles, ordered them by the count column in descending order, and returned only the top 3.
+	Counted total number of articles, ordered them by the count column in 
+	descending order, and returned only the top 3.
 
 Question 2 Solution:
 
-	Extrapolated on the first question's query by joining the authors table to the author and log which were joined using the LIKE operator.
+	Extrapolated on the first question's query by joining the authors table 
+	to the author and log which were joined using the LIKE operator.
 
 	Replaced articles.title with authors.name.
 
 Question 3 Solution:
 	
-	Created two Views with subqueries. First view created a table with the log table's time column (filtered by date to remove time) and the count of the log table's status column. The second query in the view consolodated the dates and number of total statuses.
+	Created two Views with subqueries. First view created a table with the 
+	log table's time column (filtered by date to remove time) and the count 
+	of the log table's status column. The second query in the view 
+	consolodated the dates and number of total statuses.
 
-	The second view generated a similar table except it only counted '404 NOT FOUND' statuses.
+	The second view generated a similar table except it only counted '404 NOT 
+	FOUND' statuses.
 
-	The final query's subquery created a table with the date column and column with percentages of error status generated from the numbers created in the two View tables. The final query returned only the dates with errors greater than 1%.
-_________________________________________________________________
-
-Views:
-
-CREATE VIEW access_sum AS
-	SELECT access_t.time, count(access_t.access_total)
-		as access_count
-	FROM (SELECT log.time::date, count(log.status)
-		as access_total
-	FROM log
-	GROUP BY log.time)
-		as access_t
-	GROUP BY access_t.time;
-
-CREATE VIEW error_sum AS
-	SELECT error_t.time, count(error_t.error_total)
-		as error_count
-	FROM (SELECT log.time::date, count(log.status)
-		as error_total
-	FROM log
-	WHERE log.status = '404 NOT FOUND'
-	GROUP BY log.time)
-		as error_t
-	GROUP By error_t.time;
+	The final query's subquery created a table with the date column and column 
+	with percentages of error status generated from the numbers created in the 
+	two View tables. The final query returned only the dates with errors 
+	greater than 1%.
