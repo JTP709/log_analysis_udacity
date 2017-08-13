@@ -63,7 +63,9 @@ def errors():
     """Determines which days did more than 1% of requests lead to errors."""
     db, cursor = connect()
     query = """
-                SELECT to_char(percent.time, 'FMMonth FMDD, YYYY'), round(percent.percentage, 2)
+                SELECT to_char(
+                    percent.time, 'FMMonth FMDD, YYYY'),
+                    round(percent.percentage, 2)
                     FROM (
                         SELECT error_sum.time,
                             (error_sum.error_total::decimal/
@@ -80,7 +82,7 @@ def errors():
     return results
     db.close()
 
-if __name__=="__main__":
+if __name__ == "__main__":
 
     top_3_articles = top_3_articles()
     top_3_authors = top_3_authors()
@@ -98,4 +100,3 @@ if __name__=="__main__":
     for date, percent in errors:
         print(str(date)+" - "+str(percent)+"%")
     print('\n')
-
